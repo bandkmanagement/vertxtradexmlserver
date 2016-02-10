@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>com.bandkmanagement.vertx - Vert.x Websocket Sample</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="Bruce Hoover">
+
+<script src="resource/js/jquery-1.10.2.min.js"></script>
+
+<!-- Le styles -->
+<link href="./resource/css/bootstrap.css" rel="stylesheet">
+<style type="text/css">
+body {
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background-color: #f5f5f5;
+}
+
+.form-signin {
+	max-width: 300px;
+	padding: 19px 29px 29px;
+	margin: 0 auto 20px;
+	background-color: #fff;
+	border: 1px solid #e5e5e5;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+	-moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+}
+
+.form-signin .form-signin-heading,.form-signin .checkbox {
+	margin-bottom: 10px;
+}
+
+.form-signin input[type="text"],.form-signin input[type="password"] {
+	font-size: 16px;
+	height: auto;
+	margin-bottom: 15px;
+	padding: 7px 9px;
+}
+
+#xmlbuffer {
+	font-size: 16px;
+	height: 40px;
+	line-height: 40px;
+	width: 300px;
+}
+
+.received {
+	width: 160px;
+	font-size: 10px;
+}
+</style>
+<link href="./resource/css/bootstrap-responsive.css" rel="stylesheet">
+
+<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+      <script src="./resource/js/html5shiv.js"></script>
+    <![endif]-->
+
+<!-- Fav and touch icons -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="./resource/ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="./resource/ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="./resource/ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed"
+	href="./resource/ico/apple-touch-icon-57-precomposed.png">
+<link rel="shortcut icon" href="./resource/ico/favicon.png">
+<script>
+	var wsocket;
+	var serviceLocation = "ws://0.0.0.0:8090/txml/";
+	var $sessionName;
+	var $message;
+	var $xmlWindow;
+	var debugR = '';
+
+	function onMessageReceived(evt) {
+		var msg = JSON.parse(evt.data); // native API
+		var $messageLine = $('<tr><td class="received">' + msg.received
+				+ '</td><td class="user label label-info">' + msg.sender
+				+ '</td><td class="message badge">' + msg.message
+				+ '</td></tr>');
+		$xmlWindow.append($messageLine);
+	}
+	
+	function sendMessage() {
+		var msg = '{"message":"' + $message.val() + '", "sender":"' + $sessionName.val() + '", "received":""}';
+		wsocket.send(msg);
+		$message.val('').focus();
+	}
+
+	function connectToTradeserver() {
+		debugR = $('#server option:selected').val();
+		wsocket = new WebSocket(serviceLocation + debugR);
+		wsocket.onmessage = onMessageReceived;
+	}
+
+	function terminateSession() {
+		wsocket.close();
+		$xmlWindow.empty();
+		$('.chat-wrapper').hide();
+		$('.chat-signin').show();
+		$sessionName.focus();
+	}
+
+	$(document).ready(function() {
+		$sessionName = $('#sessionname');
+		$message = $('#message');
+		$xmlWindow = $('#response');
+		$('.chat-wrapper').hide();
+		$sessionName.focus();
+		
+		$('#enterSession').click(function(evt) {
+			evt.preventDefault();
+			connectToTradeserver();
+			$('.chat-wrapper h2').text('Chat # '+$sessionName.val() + "@" + debugR);
+			$('.chat-signin').hide();
+			$('.chat-wrapper').show();
+			$message.focus();
+		});
+		
+		$('#send-xml').submit(function(evt) {
+			evt.preventDefault();
+			sendMessage()
+		});
+		
+		$('#terminate-session').click(function(){
+			terminateSession();
+		});
+	});
+</script>
+</head>
+
+<body>
+
+	<div class="container chat-signin">
+		<form class="form-signin">
+			<h2 class="form-signin-heading">TradeServer sign in</h2>
+			<label for="nickname">Sessioname</label> <input type="text" class="input-block-level" placeholder="Sessionname" id="sessionname">
+			<div class="btn-group">
+				<label for="chatroom">Xml Type</label> <select size="1" id="chatroom">
+					<option>type 1</option>
+					<option>type 2</option>
+					<option>type 3</option>
+					<option>type 4</option>
+				</select>
+			</div>
+			<button class="btn btn-large btn-primary" type="submit" id="enterSession">Log in</button>
+		</form>
+	</div>
+	<!-- /container -->
+
+	<div class="container chat-wrapper">
+		<form id="send-xml">
+			<h2 class="alert alert-success"></h2>
+			<table id="response" class="table table-bordered"></table>
+			<fieldset>
+				<legend>Enter xml to process..</legend>
+				<div class="controls">
+					<input type="text" class="input-block-level" placeholder="Your message..." id="message" style="height:180px"/>
+					<input type="submit" class="btn btn-large btn-block btn-primary" value="Send xml" />
+					<button class="btn btn-large btn-block" type="button" id="terminate-session">Leave debugger</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</body>
+</html>

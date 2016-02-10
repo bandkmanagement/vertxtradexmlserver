@@ -1,0 +1,7 @@
+{
+  "main":"com.bandkmanagement.vertx.WebsocketVerticle",
+  "description":"Vert.x Websocket Trade XML Sample",
+  "licenses": ["The Apache Software License Version 2.0"],
+  "author": "Bruce Hoover",
+  "homepage": "http://www.bandkmanagement.com/"
+}
